@@ -15,4 +15,5 @@ router.post('/post',[
     .isLength({min:5})
 ],feedController.createPost);
 
+router.get('/post/:postId',feedController.getPost);
 module.exports = router;
