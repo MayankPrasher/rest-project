@@ -9,8 +9,12 @@ const feedRoutes = require('./routes/feed');
 const authRoutes = require('./routes/auth');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
-
+const {createServer} = require('http');
+const {Server} = require('./socket').init();
 const app = express();
+const httpServer = createServer(app);
+
+// const http = require('http').Server(app);
 
 const storage = multer.diskStorage({
    destination: function(req, file, cb) {
@@ -57,7 +61,15 @@ app.use((error,req,res,next)=>{
 mongoose
 .connect('mongodb+srv://prasher6789:Mayank%401509@cluster0.dxwz3zy.mongodb.net/messages')
 .then(result=>{
-   app.listen(8080);
+   // const server = http.listen(8080);
+   const io = new Server(httpServer,{ cors: { origin: '*' } });
+   io.on('connection',socket=>{
+      exports.socket = socket;
+      console.log('Client connected');
+     
+   });
+    httpServer.listen(8080);
+  
 })
 .catch(err=>console.log(err));
 
