@@ -5,14 +5,16 @@ const mongoose = require('mongoose');
 
 const bodyParser = require('body-parser');
 
-const feedRoutes = require('./routes/feed');
-const authRoutes = require('./routes/auth');
+
 const multer = require('multer');
-const { v4: uuidv4 } = require('uuid');
-const {createServer} = require('http');
-const {Server} = require('./socket').init();
+const {graphqlHTTP} = require('express-graphql');
+
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolvers');
+const auth = require('./middleware/Auth');
+
 const app = express();
-const httpServer = createServer(app);
+
 
 // const http = require('http').Server(app);
 
@@ -45,10 +47,26 @@ app.use((req,res,next)=>{
    res.setHeader('Access-Control-Allow-Origin',"*");
    res.setHeader('Access-Control-Allow-Methods',"GET,POST,PUT,PATCH,DELETE");
    res.setHeader('Access-Control-Allow-Headers',"Content-Type,Authorization");
+   if(req.method === 'OPTIONS'){
+      return res.sendStatus(200);
+   }
    next();
 });
-app.use('/feed',feedRoutes);
-app.use('/auth',authRoutes);
+app.use(auth);
+app.use('/graphql',graphqlHTTP({
+   schema:graphqlSchema,
+   rootValue:graphqlResolver,
+   graphiql:true,
+   formatError(err){
+      if(!err.originalError){
+         return err;
+      }
+      const data = err.originalError.data;
+      const message = err.message || "An error occured.";
+      const code = err.originalError.code || 500;
+      return {message : message , status: code , data : data};
+   }
+}));
 
 app.use((error,req,res,next)=>{
    console.log(error);
@@ -61,14 +79,8 @@ app.use((error,req,res,next)=>{
 mongoose
 .connect('mongodb+srv://prasher6789:Mayank%401509@cluster0.dxwz3zy.mongodb.net/messages')
 .then(result=>{
-   // const server = http.listen(8080);
-   const io = new Server(httpServer,{ cors: { origin: '*' } });
-   io.on('connection',socket=>{
-      exports.socket = socket;
-      console.log('Client connected');
-     
-   });
-    httpServer.listen(8080);
+  
+    app.listen(8080);
   
 })
 .catch(err=>console.log(err));
