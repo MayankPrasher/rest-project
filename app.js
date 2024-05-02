@@ -76,8 +76,8 @@ app.use((error,req,res,next)=>{
    res.status(status).json({message:message,data:data});
 });
 
-mongoose
-.connect('mongodb+srv://prasher6789:Mayank%401509@cluster0.dxwz3zy.mongodb.net/messages')
+mongoose         
+.connect('MONGO DB URL')
 .then(result=>{
   
     app.listen(8080);
